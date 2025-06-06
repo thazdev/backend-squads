@@ -6,5 +6,5 @@ export const db = new Database({
   url: process.env.ARANGO_URL,
 });
 
-db.useDatabase(process.env.ARANGO_DATABASE!);
+db.database(process.env.ARANGO_DATABASE!);
 db.useBasicAuth(process.env.ARANGO_USER!, process.env.ARANGO_PASS!);
