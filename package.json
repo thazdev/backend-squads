@@ -10,13 +10,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "apollo-server": "^3.13.0",
     "arangojs": "^10.1.1",
+    "bcrypt": "^6.0.0",
     "dotenv": "^16.5.0",
-    "graphql": "^16.11.0"
+    "graphql": "^16.11.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }

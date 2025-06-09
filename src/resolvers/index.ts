@@ -1,62 +1,24 @@
-import { db } from '../database/arango';
+import { collaboratorQueries } from './queries/collaboratorQueries';
+import { squadQueries } from './queries/squadQueries';
+import { taskQueries } from './queries/taskQueries';
 
-const collection = db.collection('collaborators');
-const squadCollection = db.collection('squads');
-const taskCollection = db.collection('tasks');
+import { userMutations } from './mutations/userMutations';
+import { collaboratorMutations } from './mutations/collaboratorMutations';
+import { squadMutations } from './mutations/squadMutations';
+import { taskMutations } from './mutations/taskMutations';
 
 const resolvers = {
   Query: {
-    getAllCollaborators: async () => {
-      const cursor = await db.query(`
-        FOR doc IN collaborators
-        RETURN doc
-      `);
-      return await cursor.all();
-    },
-    getAllSquads: async () => {
-      const cursor = await db.query(`
-        FOR doc IN squads
-        RETURN doc
-      `);
-      return await cursor.all();
-    },
-    getAllTasks: async () => {
-      const cursor = await db.query(`
-        FOR doc IN tasks
-        RETURN doc
-      `);
-      return await cursor.all();
-    }
-    
+    ...collaboratorQueries,
+    ...squadQueries,
+    ...taskQueries
   },
   Mutation: {
-    createCollaborator: async (_: any, { input }: any) => {
-      const meta = await collection.save({
-        ...input,
-        squadIds: []
-      });
-      return {
-        _key: meta._key,
-        ...input,
-        squadIds: []
-      };
-    },
-    createSquad: async (_: any, { input }: any) => {
-      const meta = await squadCollection.save(input);
-      return {
-        _key: meta._key,
-        ...input
-      };
-    },
-    createTask: async (_: any, { input }: any) => {
-      const meta = await taskCollection.save(input);
-      return {
-        _key: meta._key,
-        ...input
-      };
-    }
+    ...userMutations,
+    ...collaboratorMutations,
+    ...squadMutations,
+    ...taskMutations
   }
 };
-
 
 export default resolvers;

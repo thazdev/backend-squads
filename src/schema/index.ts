@@ -1,6 +1,18 @@
 import { gql } from 'apollo-server';
 
 const typeDefs = gql`
+
+  type User {
+    _key: ID!
+    name: String!
+    email: String!
+  }
+
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+
   type Collaborator {
     _key: ID!
     name: String!
@@ -17,6 +29,7 @@ const typeDefs = gql`
   }
 
   type Query {
+    _: Boolean
     getAllCollaborators: [Collaborator!]!
     getAllSquads: [Squad!]!
     getAllTasks: [Task!]!
@@ -35,6 +48,8 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    register(name: String!, email: String!, password: String!): AuthPayload
+    login(email: String!, password: String!): AuthPayload
     createCollaborator(input: CollaboratorInput!): Collaborator!
     createSquad(input: SquadInput!): Squad!
     createTask(input: TaskInput!): Task!
