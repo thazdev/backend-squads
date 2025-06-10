@@ -22,10 +22,14 @@ const typeDefs = gql`
   }
 
   type Squad {
+    id: ID!
     _key: ID!
     name: String!
     description: String
     memberIds: [String!]!
+    archived: Boolean!
+    createdAt: String!
+    ownerId: ID!
   }
 
   type Query {
@@ -33,6 +37,7 @@ const typeDefs = gql`
     getAllCollaborators: [Collaborator!]!
     getAllSquads: [Squad!]!
     getAllTasks: [Task!]!
+    squads: [Squad!]!
   }
 
   input CollaboratorInput {
@@ -51,7 +56,9 @@ const typeDefs = gql`
     register(name: String!, email: String!, password: String!): AuthPayload
     login(email: String!, password: String!): AuthPayload
     createCollaborator(input: CollaboratorInput!): Collaborator!
-    createSquad(input: SquadInput!): Squad!
+    createSquad(input: CreateSquadInput!): Squad!
+    updateSquad(input: UpdateSquadInput!): Squad!
+    deleteSquad(id: ID!): Boolean!
     createTask(input: TaskInput!): Task!
   }
 
@@ -63,6 +70,19 @@ const typeDefs = gql`
   assigneeId: String!
   squadId: String
 }
+
+input CreateSquadInput {
+  name: String!
+  description: String
+}
+
+input UpdateSquadInput {
+  id: ID!
+  name: String
+  description: String
+  archived: Boolean
+}
+
 
 
   enum TaskType {

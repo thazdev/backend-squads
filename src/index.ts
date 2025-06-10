@@ -3,22 +3,25 @@ import typeDefs from './schema';
 import resolvers from './resolvers';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
     if (!token) return {};
-    
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-      return { user: decoded };
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      console.log("decoded ⇒", decoded);
+      return { user: { id: decoded._key } };
     } catch {
       return {};
     }
-  }
+  },
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+server.listen({ port: 4000 }).then(({ url }) => {
+  console.log(`🚀  GraphQL ready at ${url}`);
 });
