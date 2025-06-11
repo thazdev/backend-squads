@@ -1,9 +1,9 @@
-import { gql } from 'apollo-server';
+import { gql } from "apollo-server";
 
 const typeDefs = gql`
-
+  """Usuário autenticado"""
   type User {
-    _key: ID!
+    id: ID!          # mapeia _key do Arango
     name: String!
     email: String!
   }
@@ -13,17 +13,26 @@ const typeDefs = gql`
     user: User!
   }
 
+  """Membro de um squad"""
   type Collaborator {
-    _key: ID!
+    id: ID!          # mapeia _key
     name: String!
-    role: String!
-    specialty: String
-    squadIds: [String!]
+    email: String!
+    role: CollaboratorRole!
+    squadId: ID
+    createdAt: String!
+    ownerId: ID!
   }
 
+  enum CollaboratorRole {
+    DEV
+    DESIGN
+    PM
+  }
+
+  """Grupo de trabalho"""
   type Squad {
-    id: ID!
-    _key: ID!
+    id: ID!          # mapeia _key
     name: String!
     description: String
     memberIds: [String!]!
@@ -32,79 +41,102 @@ const typeDefs = gql`
     ownerId: ID!
   }
 
+  """Tarefa do kanban"""
+  type Task {
+    id: ID!          # mapeia _key
+    title: String!
+    description: String
+    status: TaskStatus!
+    priority: TaskPriority!
+    squadId: ID!
+    assigneeId: ID
+    assignee: Collaborator        # opcional
+    createdAt: String!
+    updatedAt: String!
+    ownerId: ID!
+  }
+
+  # ---------- ROOT TYPES ----------
   type Query {
-    _: Boolean
+    _empty: Boolean
+    # Helpers (mantidos para seu playground)
     getAllCollaborators: [Collaborator!]!
     getAllSquads: [Squad!]!
     getAllTasks: [Task!]!
+
+    # API principal
     squads: [Squad!]!
-  }
-
-  input CollaboratorInput {
-    name: String!
-    role: String!
-    specialty: String
-  }
-
-  input SquadInput {
-    name: String!
-    description: String
-    memberIds: [String!]
+    collaborators(filter: CollaboratorFilter): [Collaborator!]!
+    tasks(squadId: ID!, assigneeId: ID): [Task!]!
   }
 
   type Mutation {
     register(name: String!, email: String!, password: String!): AuthPayload
     login(email: String!, password: String!): AuthPayload
-    createCollaborator(input: CollaboratorInput!): Collaborator!
+
+    createCollaborator(input: CreateCollaboratorInput!): Collaborator!
     createSquad(input: CreateSquadInput!): Squad!
     updateSquad(input: UpdateSquadInput!): Squad!
     deleteSquad(id: ID!): Boolean!
-    createTask(input: TaskInput!): Task!
+
+    createTask(input: CreateTaskInput!): Task!
+    updateTask(input: UpdateTaskInput!): Task!
+    deleteTask(id: ID!): Boolean!
   }
 
-  type Task {
-  _key: ID!
-  title: String!
-  type: TaskType!
-  status: TaskStatus!
-  assigneeId: String!
-  squadId: String
-}
+  # ---------- INPUTS ----------
+  input CollaboratorFilter {
+    squadId: ID
+  }
 
-input CreateSquadInput {
-  name: String!
-  description: String
-}
+  input CreateCollaboratorInput {
+    name: String!
+    email: String!
+    role: CollaboratorRole
+    squadId: ID
+  }
 
-input UpdateSquadInput {
-  id: ID!
-  name: String
-  description: String
-  archived: Boolean
-}
+  input CreateSquadInput {
+    name: String!
+    description: String
+  }
 
+  input UpdateSquadInput {
+    id: ID!
+    name: String
+    description: String
+    archived: Boolean
+  }
 
+  enum TaskStatus {
+    TODO
+    DOING
+    DONE
+  }
 
-  enum TaskType {
-  LIGACAO
-  TAREFA
-  REUNIAO
-  EMAIL
-}
+  enum TaskPriority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+  }
 
-enum TaskStatus {
-  A_FAZER
-  FAZENDO
-  FEITO
-}
+  input CreateTaskInput {
+    title: String!
+    description: String
+    priority: TaskPriority
+    squadId: ID!
+    assigneeId: ID
+  }
 
-input TaskInput {
-  title: String!
-  type: TaskType!
-  status: TaskStatus!
-  assigneeId: String!
-  squadId: String
-}
+  input UpdateTaskInput {
+    id: ID!
+    title: String
+    description: String
+    status: TaskStatus
+    priority: TaskPriority
+    assigneeId: ID
+  }
 `;
 
 export default typeDefs;

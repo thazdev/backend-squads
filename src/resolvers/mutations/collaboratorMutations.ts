@@ -1,21 +1,38 @@
-import { db } from '../../database/arango';
+import { db } from "../../database/arango";
+import { AuthenticationError, UserInputError } from "apollo-server";
 
-const collection = db.collection('collaborators');
+const collabCol = db.collection("collaborators");
+const squadCol  = db.collection("squads");
 
 export const collaboratorMutations = {
-  createCollaborator: async (_: any, { input }: any, context: any) => {
-    if (!context.user) throw new Error('Não autenticado');
-    if (!input.name) throw new Error('Nome do colaborador é obrigatório');
+  createCollaborator: async (_: any, { input }: any, ctx: any) => {
+    const ownerId = ctx?.user?.id;
+    if (!ownerId) throw new AuthenticationError("Login required");
+    if (!input.name?.trim())  throw new UserInputError("Name required");
+    if (!input.email?.trim()) throw new UserInputError("Email required");
 
-    const meta = await collection.save({
-      ...input,
-      squadIds: []
-    });
+    const emailExists = await db.query(
+      `FOR c IN collaborators FILTER c.email == @e RETURN 1`,
+      { e: input.email }
+    );
+    if (await emailExists.next()) {
+      throw new UserInputError("Email already in use");
+    }
+    if (input.squadId) {
+      const squad = await squadCol.documentExists(input.squadId);
+      if (!squad) throw new UserInputError("Squad not found");
+    }
 
-    return {
-      _key: meta._key,
-      ...input,
-      squadIds: []
+    const doc = {
+      name: input.name,
+      email: input.email,
+      role: input.role || "DEV",
+      squadId: input.squadId || null,
+      createdAt: new Date().toISOString(),
+      ownerId,
     };
-  }
+
+    const meta = await collabCol.save(doc);
+    return { id: meta._key, ...doc };
+  },
 };
