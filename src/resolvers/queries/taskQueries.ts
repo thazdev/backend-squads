@@ -1,19 +1,34 @@
+import { ApolloError } from "apollo-server";
 import { db } from "../../database/arango";
-import { AuthenticationError } from "apollo-server";
+
+const taskCol = db.collection("tasks");
 
 export const taskQueries = {
-  tasks: async (_: any, { squadId }: any, ctx: any) => {
-    const ownerId = ctx?.user?.id;
-    if (!ownerId) throw new AuthenticationError("Login required");
+  async tasks(
+    _: unknown,
+    { squadId, assigneeId }: { squadId?: string; assigneeId?: string },
+  ) {
+    const filters = [];
+    if (squadId) filters.push("FILTER t.squadId == @squadId");
+    if (assigneeId) filters.push("FILTER t.assigneeId == @assigneeId");
 
-    const cursor = await db.query(
-      `
-        FOR t IN tasks
-          FILTER t.squadId == @squad && t.ownerId == @owner
-          RETURN MERGE(t, { id: t._key })
-      `,
-      { squad: squadId, owner: ownerId }
-    );
+    const query = `
+      FOR t IN tasks
+      ${filters.join("\n")}
+      SORT t.createdAt DESC
+      RETURN MERGE(t, { id: t._key })
+    `;
+
+    const cursor = await db.query(query, { squadId, assigneeId });
     return await cursor.all();
+  },
+
+  async task(_: unknown, { id }: { id: string }) {
+    try {
+      const doc = await taskCol.document(String(id));
+      return { ...doc, id: doc._key };
+    } catch {
+      throw new ApolloError("Task not found", "NOT_FOUND");
+    }
   },
 };

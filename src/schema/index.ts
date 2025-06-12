@@ -1,9 +1,11 @@
 import { gql } from "apollo-server";
 
 const typeDefs = gql`
-  """Usuário autenticado"""
+  """
+  Usuário autenticado
+  """
   type User {
-    id: ID!          # mapeia _key do Arango
+    id: ID!
     name: String!
     email: String!
   }
@@ -13,9 +15,8 @@ const typeDefs = gql`
     user: User!
   }
 
-  """Membro de um squad"""
   type Collaborator {
-    id: ID!          # mapeia _key
+    id: ID! # mapeia _key
     name: String!
     email: String!
     role: CollaboratorRole!
@@ -30,44 +31,43 @@ const typeDefs = gql`
     PM
   }
 
-  """Grupo de trabalho"""
   type Squad {
-    id: ID!          # mapeia _key
+    id: ID!
     name: String!
     description: String
-    memberIds: [String!]!
+    memberIds: [ID!]
+    goal: String
     archived: Boolean!
     createdAt: String!
     ownerId: ID!
   }
 
-  """Tarefa do kanban"""
   type Task {
-    id: ID!          # mapeia _key
+    id: ID! # mapeia _key
     title: String!
     description: String
     status: TaskStatus!
     priority: TaskPriority!
+    difficulty: Int
+    impact: Int
     squadId: ID!
     assigneeId: ID
-    assignee: Collaborator        # opcional
+    assignee: Collaborator
     createdAt: String!
     updatedAt: String!
     ownerId: ID!
   }
 
-  # ---------- ROOT TYPES ----------
   type Query {
     _empty: Boolean
     # Helpers (mantidos para seu playground)
     getAllCollaborators: [Collaborator!]!
     getAllSquads: [Squad!]!
     getAllTasks: [Task!]!
-
-    # API principal
     squads: [Squad!]!
     collaborators(filter: CollaboratorFilter): [Collaborator!]!
-    tasks(squadId: ID!, assigneeId: ID): [Task!]!
+    tasks(squadId: ID, assigneeId: ID): [Task!]!
+    task(id: ID!): Task
   }
 
   type Mutation {
@@ -76,6 +76,8 @@ const typeDefs = gql`
 
     createCollaborator(input: CreateCollaboratorInput!): Collaborator!
     createSquad(input: CreateSquadInput!): Squad!
+    addMemberToSquad(squadId: ID!, memberId: ID!): Squad!
+    removeMemberFromSquad(squadId: ID!, memberId: ID!): Squad!
     updateSquad(input: UpdateSquadInput!): Squad!
     deleteSquad(id: ID!): Boolean!
 
@@ -99,6 +101,7 @@ const typeDefs = gql`
   input CreateSquadInput {
     name: String!
     description: String
+    memberIds: [ID!]
   }
 
   input UpdateSquadInput {
@@ -111,6 +114,8 @@ const typeDefs = gql`
   enum TaskStatus {
     TODO
     DOING
+    BLOCKED
+    CANCELED
     DONE
   }
 
@@ -135,6 +140,8 @@ const typeDefs = gql`
     description: String
     status: TaskStatus
     priority: TaskPriority
+    difficulty: Int
+    impact: Int
     assigneeId: ID
   }
 `;

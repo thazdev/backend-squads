@@ -1,5 +1,5 @@
-import { db } from "../../database/arango";
 import { AuthenticationError, UserInputError } from "apollo-server";
+import { db } from "../../database/arango";
 
 const taskCol = db.collection("tasks");
 const squadCol = db.collection("squads");
@@ -30,13 +30,21 @@ export const taskMutations = {
     return { id: meta._key, ...doc };
   },
 
-  updateTask: async (_: any, { input }: any, ctx: any) => {
-    const { id, status } = input;
-    const task = await taskCol.document(id);
-    await taskCol.update(id, { status, updatedAt: new Date().toISOString() });
-    return { ...task, status };
+  async updateTask(_: unknown, { input }: { input: any }, ctx: any) {
+    const { id, ...fields } = input;
+    const payload = Object.fromEntries(
+      Object.entries(fields).filter(([, v]) => v !== undefined),
+    );
+    if (Object.keys(payload).length === 0) {
+      throw new Error("Nothing to update");
+    }
+    await taskCol.update(id, {
+      ...payload,
+      updatedAt: new Date().toISOString(),
+    });
+    const doc = await taskCol.document(id);
+    return { ...doc, id: doc._key };
   },
-  
 
   deleteTask: async (_: any, { id }: any, ctx: any) => {
     const ownerId = ctx?.user?.id;
