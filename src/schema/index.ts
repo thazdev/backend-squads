@@ -1,13 +1,14 @@
 import { gql } from "apollo-server";
 
 const typeDefs = gql`
-  """
-  Usuário autenticado
-  """
+  scalar Upload
+
   type User {
     id: ID!
     name: String!
     email: String!
+    bio: String
+    avatar: String
   }
 
   type AuthPayload {
@@ -68,6 +69,13 @@ const typeDefs = gql`
     collaborators(filter: CollaboratorFilter): [Collaborator!]!
     tasks(squadId: ID, assigneeId: ID): [Task!]!
     task(id: ID!): Task
+    me: MePayload
+  }
+
+  type MePayload {
+    user: User!
+    squads: [Squad!]!
+    tasksOverall: TasksStats!
   }
 
   type Mutation {
@@ -81,6 +89,8 @@ const typeDefs = gql`
     updateSquad(input: UpdateSquadInput!): Squad!
     deleteSquad(id: ID!): Boolean!
 
+    updateUser(input: UpdateUserInput!): User!
+    uploadAvatar(url: String!): String!
     createTask(input: CreateTaskInput!): Task!
     updateTask(input: UpdateTaskInput!): Task!
     deleteTask(id: ID!): Boolean!
@@ -89,6 +99,12 @@ const typeDefs = gql`
   # ---------- INPUTS ----------
   input CollaboratorFilter {
     squadId: ID
+  }
+
+  input UpdateUserInput {
+    name: String
+    bio: String
+    avatar: String
   }
 
   input CreateCollaboratorInput {
@@ -102,6 +118,7 @@ const typeDefs = gql`
     name: String!
     description: String
     memberIds: [ID!]
+    goal: String
   }
 
   input UpdateSquadInput {
@@ -109,6 +126,12 @@ const typeDefs = gql`
     name: String
     description: String
     archived: Boolean
+  }
+
+  type TasksStats {
+    total: Int!
+    pending: Int!
+    done: Int!
   }
 
   enum TaskStatus {

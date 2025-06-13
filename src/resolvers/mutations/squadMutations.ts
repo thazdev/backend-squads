@@ -1,95 +1,110 @@
-/* src/graphql/mutations/squadMutations.ts */
+// src/graphql/resolvers/squadMutations.ts
 import { AuthenticationError, UserInputError } from "apollo-server";
+import { aql } from "arangojs";
 import { db } from "../../database/arango";
 
 const squadCol = db.collection("squads");
 const collabCol = db.collection("collaborators");
 
-interface MemberArgs {
-  squadId: string;
-  memberId: string;
-}
-
 export const squadMutations = {
-  /* ---------------- CRIAR ---------------- */
-  async createSquad(_: any, { input }: any, context: any) {
-    const ownerId = context?.user?.id;
+  /* ─────────── CREATE ─────────── */
+  createSquad: async (_: any, { input }: any, ctx: any) => {
+    const ownerId = ctx?.user?.id;
     if (!ownerId) throw new AuthenticationError("Login required");
-    if (!input.name?.trim())
-      throw new UserInputError("Squad name is mandatory");
+    if (!input.name?.trim()) throw new UserInputError("Name required");
 
-    /* já existe? */
-    const dup = await db.query(
-      `FOR s IN squads FILTER s.name == @name AND s.ownerId == @owner RETURN 1`,
-      { name: input.name.trim(), owner: ownerId },
-    );
-    if (await dup.next())
-      throw new UserInputError("You already have a squad with this name");
+    const memberIds: string[] = input.memberIds ?? [];
 
     const doc = {
-      name: input.name.trim(),
-      description: input.description ?? "",
-      memberIds: input.memberIds ?? [],
+      name: input.name,
+      description: input.description ?? null,
+      goal: input.goal ?? null,
+      memberIds,
       archived: false,
       createdAt: new Date().toISOString(),
       ownerId,
     };
-    const meta = await squadCol.save(doc);
 
-    /* opcional: atualizar colaboradores */
-    if (doc.memberIds.length) {
-      await Promise.all(
-        doc.memberIds.map((id: string) =>
-          collabCol.update(id, { squadId: meta._key }, { ignoreRevs: true }),
-        ),
-      );
+    /* salva o squad */
+    const { _key: sid } = await squadCol.save(doc);
+
+    /* vincula colaboradores (mantém dados consistentes) */
+    if (memberIds.length) {
+      await db.query(aql`
+        FOR c IN ${collabCol}
+          FILTER c._key IN ${memberIds}
+          UPDATE c WITH { squadId: ${sid} } IN ${collabCol}
+      `);
     }
-    return { id: meta._key, ...doc };
+
+    return { id: sid, ...doc };
   },
 
-  /* ---------------- NOVO: adicionar membro ---------------- */
-  async addMemberToSquad(
-    _: any,
-    { squadId, memberId }: { squadId: string; memberId: string },
-    context: any,
-  ) {
-    const ownerId = context?.user?.id;
+  /* ─────────── ADD MEMBER ─────────── */
+  addMemberToSquad: async (_: any, { squadId, memberId }: any, ctx: any) => {
+    const ownerId = ctx?.user?.id;
     if (!ownerId) throw new AuthenticationError("Login required");
 
-    /* carrega o squad */
-    const squad = await squadCol.document(squadId).catch(() => null);
+    const squad = await squadCol.document(squadId);
     if (!squad) throw new UserInputError("Squad not found");
 
-    /* só o owner do squad pode adicionar */
-    if (squad.ownerId !== ownerId) throw new AuthenticationError("Not allowed");
+    /* adiciona ao array, se ainda não estiver */
+    if (!squad.memberIds?.includes(memberId)) {
+      await squadCol.update(squadId, {
+        memberIds: [...(squad.memberIds || []), memberId],
+      });
+    }
 
-    /* evita duplicar */
-    const newMemberIds = Array.from(
-      new Set([...(squad.memberIds ?? []), memberId]),
-    );
+    /* vincula colaborador */
+    await collabCol.update(memberId, { squadId });
 
-    /* grava */
-    await squadCol.update(
-      squadId,
-      { memberIds: newMemberIds },
-      { ignoreRevs: true },
-    );
-
-    await collabCol.update(memberId, { squadId }, { ignoreRevs: true });
-
-    return { id: squadId, ...squad, memberIds: newMemberIds };
+    const updated = await squadCol.document(squadId);
+    return { id: squadId, ...updated };
   },
-  async removeMemberFromSquad(
-    _parent: unknown,
-    { squadId, memberId }: MemberArgs,
-    _ctx: unknown,
-  ) {
+
+  /* ─────────── REMOVE MEMBER ─────────── */
+  removeMemberFromSquad: async (
+    _: any,
+    { squadId, memberId }: any,
+    ctx: any,
+  ) => {
+    const ownerId = ctx?.user?.id;
+    if (!ownerId) throw new AuthenticationError("Login required");
+
     const squad = await squadCol.document(squadId);
-    const memberIds = (squad.memberIds ?? []).filter(
-      (id: string) => id !== memberId,
-    );
-    await squadCol.update(squadId, { memberIds }, { ignoreRevs: true });
-    await collabCol.update(memberId, { squadId: null }, { ignoreRevs: true });
-    return { id: squadId, ...squad, memberIds };
+    if (!squad) throw new UserInputError("Squad not found");
+
+    /* retira do array */
+    await squadCol.update(squadId, {
+      memberIds: (squad.memberIds || []).filter(
+        (id: string) => id !== memberId,
+      ),
+    });
+
+    /* limpa vínculo no colaborador */
+    await collabCol.update(memberId, { squadId: null });
+
+    const updated = await squadCol.document(squadId);
+    return { id: squadId, ...updated };
+  },
+
+  /* ─────────── DELETE ─────────── */
+  deleteSquad: async (_: any, { id }: any, ctx: any) => {
+    const ownerId = ctx?.user?.id;
+    if (!ownerId) throw new AuthenticationError("Login required");
+
+    const exists = await squadCol.documentExists(id);
+    if (!exists) throw new UserInputError("Squad not found");
+
+    await squadCol.remove(id);
+
+    /* desvincula todos os colaboradores desse squad */
+    await db.query(aql`
+      FOR c IN ${collabCol}
+        FILTER c.squadId == ${id}
+        UPDATE c WITH { squadId: null } IN ${collabCol}
+    `);
+
+    return true;
   },
 };
