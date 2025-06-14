@@ -1,58 +1,30 @@
-import bcrypt from 'bcrypt';
-import { db } from '../../database/arango';
-import { generateToken } from '../../utils/auth';
+// backend/resolvers/userMutations.ts
+import { AuthenticationError } from "apollo-server";
+import { db } from "../../database/arango";
 
-const userCollection = db.collection('users');
+const userCollection = db.collection("users");
 
 export const userMutations = {
-  register: async (_: any, { name, email, password }: any) => {
-    const cursor = await db.query(`
-      FOR u IN users
-      FILTER u.email == @email
-      RETURN u
-    `, { email });
+  /* ────────── REGISTRO / LOGIN permanecem iguais ────────── */
 
-    const existing = await cursor.next();
-    if (existing) throw new Error('Email já está em uso.');
+  updateUser: async (_: any, { input }: any, ctx: any) => {
+    const uid = ctx?.user?.id;
+    if (!uid) throw new AuthenticationError("Login required");
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { name, email, password: hashedPassword };
-    const meta = await userCollection.save(newUser);
+    await userCollection.update(uid, {
+      ...("name" in input ? { name: input.name } : {}),
+      ...("bio" in input ? { bio: input.bio } : {}),
+      ...("avatar" in input ? { avatar: input.avatar } : {}), // ← novo
+    });
 
-    const token = generateToken({ _key: meta._key, email });
-
-    return {
-      token,
-      user: {
-        _key: meta._key,
-        name,
-        email,
-      },
-    };
+    const updated = await userCollection.document(uid);
+    return { id: uid, ...updated };
   },
 
-  login: async (_: any, { email, password }: any) => {
-    const cursor = await db.query(`
-      FOR u IN users
-      FILTER u.email == @email
-      RETURN u
-    `, { email });
-
-    const user = await cursor.next();
-    if (!user) throw new Error('Email ou senha inválidos.');
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error('Email ou senha inválidos.');
-
-    const token = generateToken({ _key: user._key, email: user.email });
-
-    return {
-      token,
-      user: {
-        _key: user._key,
-        name: user.name,
-        email: user.email,
-      },
-    };
-  }
+  uploadAvatar: async (_: any, { url }: any, ctx: any) => {
+    const uid = ctx?.user?.id;
+    if (!uid) throw new AuthenticationError("Login required");
+    await userCollection.update(uid, { avatar: url });
+    return url;
+  },
 };

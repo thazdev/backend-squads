@@ -1,10 +1,19 @@
 import { gql } from "apollo-server";
 
 const typeDefs = gql`
+<<<<<<< HEAD
   type User {
     id: ID!          
+=======
+  scalar Upload
+
+  type User {
+    id: ID!
+>>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     email: String!
+    bio: String
+    avatar: String
   }
 
   type AuthPayload {
@@ -13,7 +22,11 @@ const typeDefs = gql`
   }
 
   type Collaborator {
+<<<<<<< HEAD
     id: ID!        
+=======
+    id: ID! # mapeia _key
+>>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     email: String!
     role: CollaboratorRole!
@@ -29,24 +42,39 @@ const typeDefs = gql`
   }
 
   type Squad {
+<<<<<<< HEAD
     id: ID!         
+=======
+    id: ID!
+>>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     description: String
-    memberIds: [String!]!
+    memberIds: [ID!]
+    goal: String
     archived: Boolean!
     createdAt: String!
     ownerId: ID!
   }
 
   type Task {
+<<<<<<< HEAD
     id: ID!         
+=======
+    id: ID! # mapeia _key
+>>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     title: String!
     description: String
     status: TaskStatus!
     priority: TaskPriority!
+    difficulty: Int
+    impact: Int
     squadId: ID!
     assigneeId: ID
+<<<<<<< HEAD
     assignee: Collaborator  
+=======
+    assignee: Collaborator
+>>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     createdAt: String!
     updatedAt: String!
     ownerId: ID!
@@ -60,7 +88,15 @@ const typeDefs = gql`
     getAllTasks: [Task!]!
     squads: [Squad!]!
     collaborators(filter: CollaboratorFilter): [Collaborator!]!
-    tasks(squadId: ID!, assigneeId: ID): [Task!]!
+    tasks(squadId: ID, assigneeId: ID): [Task!]!
+    task(id: ID!): Task
+    me: MePayload
+  }
+
+  type MePayload {
+    user: User!
+    squads: [Squad!]!
+    tasksOverall: TasksStats!
   }
 
   type Mutation {
@@ -69,9 +105,13 @@ const typeDefs = gql`
 
     createCollaborator(input: CreateCollaboratorInput!): Collaborator!
     createSquad(input: CreateSquadInput!): Squad!
+    addMemberToSquad(squadId: ID!, memberId: ID!): Squad!
+    removeMemberFromSquad(squadId: ID!, memberId: ID!): Squad!
     updateSquad(input: UpdateSquadInput!): Squad!
     deleteSquad(id: ID!): Boolean!
 
+    updateUser(input: UpdateUserInput!): User!
+    uploadAvatar(url: String!): String!
     createTask(input: CreateTaskInput!): Task!
     updateTask(input: UpdateTaskInput!): Task!
     deleteTask(id: ID!): Boolean!
@@ -80,6 +120,12 @@ const typeDefs = gql`
   # ---------- INPUTS ----------
   input CollaboratorFilter {
     squadId: ID
+  }
+
+  input UpdateUserInput {
+    name: String
+    bio: String
+    avatar: String
   }
 
   input CreateCollaboratorInput {
@@ -92,6 +138,8 @@ const typeDefs = gql`
   input CreateSquadInput {
     name: String!
     description: String
+    memberIds: [ID!]
+    goal: String
   }
 
   input UpdateSquadInput {
@@ -101,9 +149,17 @@ const typeDefs = gql`
     archived: Boolean
   }
 
+  type TasksStats {
+    total: Int!
+    pending: Int!
+    done: Int!
+  }
+
   enum TaskStatus {
     TODO
     DOING
+    BLOCKED
+    CANCELED
     DONE
   }
 
@@ -128,6 +184,8 @@ const typeDefs = gql`
     description: String
     status: TaskStatus
     priority: TaskPriority
+    difficulty: Int
+    impact: Int
     assigneeId: ID
   }
 `;

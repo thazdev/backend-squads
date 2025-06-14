@@ -12,7 +12,9 @@
   "license": "ISC",
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/graphql-upload": "^17.0.0",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.13",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
@@ -20,8 +22,11 @@
     "apollo-server": "^3.13.0",
     "arangojs": "^10.1.1",
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "graphql": "^16.11.0",
-    "jsonwebtoken": "^9.0.2"
+    "graphql-upload": "16.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1"
   }
 }

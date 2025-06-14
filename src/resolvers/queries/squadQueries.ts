@@ -1,6 +1,6 @@
 // src/graphql/resolvers/squadQueries.ts
-import { db } from "../../database/arango";
 import { AuthenticationError } from "apollo-server";
+import { db } from "../../database/arango";
 
 export const squadQueries = {
   squads: async (_: any, __: any, context: any) => {
@@ -15,7 +15,7 @@ export const squadQueries = {
           FILTER s.ownerId == @owner
           RETURN MERGE(s, { id: s._key })
       `,
-      { owner: ownerId }
+      { owner: ownerId },
     );
     return await cursor.all();
   },
