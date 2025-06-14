@@ -11,12 +11,18 @@ const SECRET = process.env.JWT_SECRET || "dev-secret";
 router.post("/", upload.single("file"), async (req, res) => {
   /* ─── autenticação ─── */
   const token = (req.headers.authorization || "").replace("Bearer ", "");
-  let uid = "";
-  try {
-    uid = (jwt.verify(token, SECRET) as any)._key;
-  } catch {
-    return res.status(401).json({ error: "invalid token" });
-  }
+let uid = "";
+try {
+  const payload = jwt.verify(token, SECRET) as any;
+  console.log("🔍 JWT payload recebido:", payload);
+  uid = payload.id; // ✅ aqui estava o erro
+  if (!uid) throw new Error("uid indefinido");
+} catch (err) {
+  console.error("❌ Erro ao decodificar token:", err);
+  return res.status(401).json({ error: "invalid token" });
+}
+
+
 
   /* ─── valida arquivo ─── */
   const file = req.file as Express.Multer.File | undefined;
@@ -31,7 +37,9 @@ router.post("/", upload.single("file"), async (req, res) => {
 
   /* ─── grava URL no usuário ─── */
   const url = `http://localhost:4000/avatars/${name}`; // absoluto
-  await db.collection("users").update(uid, { avatar: url });
+  const userId = `users/${uid}`;
+  await db.collection("users").update(userId, { avatar: url });
+
 
   res.json({ url });
 });

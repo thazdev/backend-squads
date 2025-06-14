@@ -9,15 +9,13 @@ import { collaboratorMutations } from "./mutations/collaboratorMutations";
 import { squadMutations } from "./mutations/squadMutations";
 import { taskMutations } from "./mutations/taskMutations";
 import { userMutations } from "./mutations/userMutations";
+import { authMutations } from "./mutations/authMutation";
 
 import { Task as TaskFieldResolvers } from "./task/TaskFieldResolvers";
 
 export default {
-<<<<<<< HEAD
-=======
   // Upload: GraphQLUpload,  ← removido
 
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
   Task: TaskFieldResolvers,
 
   Query: {
@@ -26,8 +24,9 @@ export default {
     ...collaboratorQueries,
     ...squadQueries,
   },
-
+  
   Mutation: {
+    ...authMutations,
     ...userMutations,
     ...collaboratorMutations,
     ...squadMutations,

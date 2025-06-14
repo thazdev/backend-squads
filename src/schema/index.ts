@@ -1,15 +1,10 @@
 import { gql } from "apollo-server";
 
 const typeDefs = gql`
-<<<<<<< HEAD
-  type User {
-    id: ID!          
-=======
   scalar Upload
 
   type User {
     id: ID!
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     email: String!
     bio: String
@@ -22,11 +17,7 @@ const typeDefs = gql`
   }
 
   type Collaborator {
-<<<<<<< HEAD
-    id: ID!        
-=======
     id: ID! # mapeia _key
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     email: String!
     role: CollaboratorRole!
@@ -42,11 +33,7 @@ const typeDefs = gql`
   }
 
   type Squad {
-<<<<<<< HEAD
-    id: ID!         
-=======
     id: ID!
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     name: String!
     description: String
     memberIds: [ID!]
@@ -57,11 +44,7 @@ const typeDefs = gql`
   }
 
   type Task {
-<<<<<<< HEAD
-    id: ID!         
-=======
     id: ID! # mapeia _key
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     title: String!
     description: String
     status: TaskStatus!
@@ -70,11 +53,7 @@ const typeDefs = gql`
     impact: Int
     squadId: ID!
     assigneeId: ID
-<<<<<<< HEAD
-    assignee: Collaborator  
-=======
     assignee: Collaborator
->>>>>>> e7ef432a45aebcd7043a73729b403dd322ba4f3a
     createdAt: String!
     updatedAt: String!
     ownerId: ID!

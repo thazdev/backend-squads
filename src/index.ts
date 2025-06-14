@@ -1,9 +1,9 @@
 /* src/index.ts */
 import { AuthenticationError } from "apollo-server-errors";
-import { ApolloServer } from "apollo-server-express";
+import { ApolloServer, ExpressContext } from "apollo-server-express";
 import cors from "cors";
 import "dotenv/config";
-import express from "express";
+import express, { Application } from "express";
 import jwt from "jsonwebtoken";
 
 import resolvers from "./resolvers";
@@ -14,7 +14,7 @@ const PORT = 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 /* ───── Express app ───── */
-const app = express();
+const app: Application = express();
 
 app.use(
   cors({
@@ -34,12 +34,12 @@ app.use("/avatars", express.static("public/avatars"));
 const apollo = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req }) => {
+  context: ({ req }: ExpressContext) => {
     const header = req.headers.authorization || "";
     if (!header.startsWith("Bearer ")) return {};
     try {
-      const { _key } = jwt.verify(header.slice(7), JWT_SECRET) as any;
-      return { user: { id: _key } };
+      const { id } = jwt.verify(header.slice(7), JWT_SECRET) as any;
+      return { user: { id } };
     } catch {
       throw new AuthenticationError("Invalid or expired token");
     }
