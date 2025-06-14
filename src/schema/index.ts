@@ -1,9 +1,8 @@
 import { gql } from "apollo-server";
 
 const typeDefs = gql`
-  """Usuário autenticado"""
   type User {
-    id: ID!          # mapeia _key do Arango
+    id: ID!          
     name: String!
     email: String!
   }
@@ -13,9 +12,8 @@ const typeDefs = gql`
     user: User!
   }
 
-  """Membro de um squad"""
   type Collaborator {
-    id: ID!          # mapeia _key
+    id: ID!        
     name: String!
     email: String!
     role: CollaboratorRole!
@@ -30,9 +28,8 @@ const typeDefs = gql`
     PM
   }
 
-  """Grupo de trabalho"""
   type Squad {
-    id: ID!          # mapeia _key
+    id: ID!         
     name: String!
     description: String
     memberIds: [String!]!
@@ -41,30 +38,26 @@ const typeDefs = gql`
     ownerId: ID!
   }
 
-  """Tarefa do kanban"""
   type Task {
-    id: ID!          # mapeia _key
+    id: ID!         
     title: String!
     description: String
     status: TaskStatus!
     priority: TaskPriority!
     squadId: ID!
     assigneeId: ID
-    assignee: Collaborator        # opcional
+    assignee: Collaborator  
     createdAt: String!
     updatedAt: String!
     ownerId: ID!
   }
 
-  # ---------- ROOT TYPES ----------
   type Query {
     _empty: Boolean
     # Helpers (mantidos para seu playground)
     getAllCollaborators: [Collaborator!]!
     getAllSquads: [Squad!]!
     getAllTasks: [Task!]!
-
-    # API principal
     squads: [Squad!]!
     collaborators(filter: CollaboratorFilter): [Collaborator!]!
     tasks(squadId: ID!, assigneeId: ID): [Task!]!

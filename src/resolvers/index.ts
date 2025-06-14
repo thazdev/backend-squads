@@ -9,13 +9,8 @@ import { taskMutations } from "./mutations/taskMutations";
 
 import { Task as TaskFieldResolvers } from "./task/TaskFieldResolvers";
 
-/**
- * Mapeamento final de resolvers a ser entregue ao ApolloServer.
- * A chave 'Task' precisa receber o objeto com os campos internos,
- * senão o loader reclama que "Task tem valor undefined".
- */
 export default {
-  Task: TaskFieldResolvers,  // <-- conecta campos de Task
+  Task: TaskFieldResolvers,
 
   Query: {
     ...collaboratorQueries,
