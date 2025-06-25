@@ -1,17 +1,14 @@
 /* src/index.ts */
-import { AuthenticationError } from "apollo-server-errors";
-import { ApolloServer, ExpressContext } from "apollo-server-express";
+import { ApolloServer } from "apollo-server-express";
 import cors from "cors";
 import "dotenv/config";
 import express, { Application } from "express";
-import jwt from "jsonwebtoken";
-
+import { contextBuilder } from "./middleware/authMiddleware"; 
 import resolvers from "./resolvers";
 import typeDefs from "./schema";
-import uploadRoute from "./uploadRoute"; // <── rota REST já criada
+import uploadRoute from "./uploadRoute";
 
 const PORT = 4000;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 console.log('[DBG]', process.env.ARANGO_USER, process.env.ARANGO_DATABASE);
 
 /* ───── Express app ───── */
@@ -35,20 +32,7 @@ app.use("/avatars", express.static("public/avatars"));
 const apollo = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req }: ExpressContext) => {
-    const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-
-    if (!token) return {};
-
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      return { user: { id: decoded.id } };
-    } catch {
-      // Token inválido ou expirado? Apenas segue sem contexto de usuário
-      return {};
-    }
-  },
+  context: contextBuilder, // ✅ usa o builder padronizado
   csrfPrevention: true,
 });
 
