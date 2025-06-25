@@ -36,9 +36,10 @@ const apollo = new ApolloServer({
   resolvers,
   context: ({ req }: ExpressContext) => {
     const header = req.headers.authorization || "";
-    if (!header.startsWith("Bearer ") || header === "Bearer ") return {};
+    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    if (!token) return {};
     try {
-      const { id } = jwt.verify(header.slice(7), JWT_SECRET) as any;
+      const { id } = jwt.verify(token, JWT_SECRET) as any;
       return { user: { id } };
     } catch {
       throw new AuthenticationError("Invalid or expired token");
