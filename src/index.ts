@@ -36,7 +36,7 @@ const apollo = new ApolloServer({
   resolvers,
   context: ({ req }: ExpressContext) => {
     const header = req.headers.authorization || "";
-    if (!header.startsWith("Bearer ")) return {};
+    if (!header.startsWith("Bearer ") || header === "Bearer ") return {};
     try {
       const { id } = jwt.verify(header.slice(7), JWT_SECRET) as any;
       return { user: { id } };
