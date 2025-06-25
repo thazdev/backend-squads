@@ -12,7 +12,7 @@ import uploadRoute from "./uploadRoute"; // <── rota REST já criada
 
 const PORT = 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
-
+console.log('[DBG]', process.env.ARANGO_USER, process.env.ARANGO_DATABASE);
 /* ───── Express app ───── */
 const app: Application = express();
 
