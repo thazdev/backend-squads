@@ -10,15 +10,14 @@ export interface AuthContext {
 
 export function contextBuilder({ req }: { req: Request }): AuthContext {
   const PUBLIC_OPERATIONS = ['register', 'login'];
-  const body = req.body;
 
-  // Verifica se é uma operação pública
+  const body = req.body;
   const operationName = body?.operationName;
+
   if (PUBLIC_OPERATIONS.includes(operationName)) {
     return {};
   }
 
-  // Caso contrário, exige o token
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(' ')[1];
@@ -30,7 +29,7 @@ export function contextBuilder({ req }: { req: Request }): AuthContext {
     }
   }
 
-  // Sem token válido ou operação pública
   return {};
 }
+
 
