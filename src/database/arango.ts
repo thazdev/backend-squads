@@ -4,5 +4,5 @@ dotenv.config();
 
 export const db = new Database({
   url: process.env.ARANGO_URL,
-  databaseName: process.env.ARANGO_DATABASE,
+  databaseName: "_system",
 });
