@@ -11,14 +11,16 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "overrides": {
-    "@types/express": "4.17.23"
+  "pnpm": {
+    "overrides": {
+      "@types/express": "4.17.23"
+    }
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^4.17.14",
     "@types/graphql-upload": "^17.0.0",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^1.4.13",
