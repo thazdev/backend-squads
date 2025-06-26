@@ -32,8 +32,7 @@ app.use("/avatars", express.static("public/avatars"));
 const apollo = new ApolloServer({
   typeDefs,
   resolvers,
-  context: contextBuilder, // ✅ usa o builder padronizado
-  csrfPrevention: true,
+  context: contextBuilder,
 });
 
 async function start() {
